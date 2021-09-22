@@ -50,18 +50,14 @@ public class DataGenerationController {
     @PostConstruct
     public void init() throws Exception {
         final String topic = "demo-topic";
-
         client = PulsarClient.builder().serviceUrl(serviceUrl).build();
-
         producer = client.newProducer(Schema.STRING).topic(topic).create();
 
-        // Init 2 consumers for consuming messages from topic A and B
+        // Create 3 consumers for consuming messages from topic
         consumerX = client.newConsumer(Schema.STRING).topic(topic).subscriptionName("sub-x").subscribe();
         consumerY = client.newConsumer(Schema.STRING).topic(topic).subscriptionName("sub-y").subscribe();
         consumerZ = client.newConsumer(Schema.STRING).topic(topic).subscriptionName("sub-z").subscribe();
 
-        // Receive message from topic A and then publish it to topic B
-        // receive message from topic B and then publish to topic C
         processMessagesFromTopic(consumerX);
         processMessagesFromTopic(consumerY);
         processMessagesFromTopic(consumerZ);
