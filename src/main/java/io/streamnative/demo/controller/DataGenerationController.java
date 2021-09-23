@@ -25,6 +25,8 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Controller;
@@ -37,6 +39,8 @@ import javax.annotation.PostConstruct;
 @RequestMapping("/demo")
 @PropertySource("classpath:application.properties")
 public class DataGenerationController {
+
+    private static final Logger log = LoggerFactory.getLogger(DataGenerationController.class);
 
     @Value("${service.url:pulsar://127.0.0.1:6650}")
     private String serviceUrl;
@@ -66,7 +70,9 @@ public class DataGenerationController {
     @RequestMapping("/data-generate")
     @ResponseBody
     public String dataGenerate() throws Exception {
+        log.info("Received new data generate request.");
         MessageId messageId = producer.newMessage().value("New Message!").send();
+        log.info("Published new message to the topic with message Id {}", messageId);
         return messageId.toString();
     }
 
@@ -75,6 +81,8 @@ public class DataGenerationController {
             while (true) {
                 try {
                     Message<String> received = consumer.receive();
+                    log.info("[{}] Received new message {} from topic.", consumer.getSubscription(),
+                            received.getValue());
                     consumer.acknowledge(received);
                 } catch (PulsarClientException e) {
                     e.printStackTrace();
