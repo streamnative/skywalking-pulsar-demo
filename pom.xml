@@ -93,6 +93,11 @@
             <artifactId>apm-toolkit-log4j-2.x</artifactId>
             <version>8.7.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.skywalking</groupId>
+            <artifactId>apm-toolkit-trace</artifactId>
+            <version>8.7.0</version>
+        </dependency>
     </dependencies>
 
     <build>

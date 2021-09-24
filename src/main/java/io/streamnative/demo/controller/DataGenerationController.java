@@ -25,6 +25,7 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
+import org.apache.skywalking.apm.toolkit.trace.Trace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,9 +63,23 @@ public class DataGenerationController {
         consumerY = client.newConsumer(Schema.STRING).topic(topic).subscriptionName("sub-y").subscribe();
         consumerZ = client.newConsumer(Schema.STRING).topic(topic).subscriptionName("sub-z").subscribe();
 
-        processMessagesFromTopic(consumerX);
-        processMessagesFromTopic(consumerY);
-        processMessagesFromTopic(consumerZ);
+        new Thread(() -> {
+            while (true) {
+                processMessageX(consumerX);
+            }
+        }).start();
+
+        new Thread(() -> {
+            while (true) {
+                processMessageY(consumerY);
+            }
+        }).start();
+
+        new Thread(() -> {
+            while (true) {
+                processMessageZ(consumerZ);
+            }
+        }).start();
     }
 
     @RequestMapping("/data-generate")
@@ -76,18 +91,39 @@ public class DataGenerationController {
         return messageId.toString();
     }
 
-    private void processMessagesFromTopic(Consumer<String> consumer) {
-        new Thread(() -> {
-            while (true) {
-                try {
-                    Message<String> received = consumer.receive();
-                    log.info("[{}] Received new message {} from topic.", consumer.getSubscription(),
-                            received.getValue());
-                    consumer.acknowledge(received);
-                } catch (PulsarClientException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+    @Trace(operationName = "Application X")
+    private void processMessageX(Consumer<String> consumer) {
+        try {
+            Message<String> received = consumer.receive();
+            log.info("[{}] Received new message {} from topic.", consumer.getSubscription(),
+                    received.getValue());
+            consumer.acknowledge(received);
+        } catch (PulsarClientException e) {
+            log.error("Failed to process message for subscription {}", consumer.getSubscription());
+        }
+    }
+
+    @Trace(operationName = "Application Y")
+    private void processMessageY(Consumer<String> consumer) {
+        try {
+            Message<String> received = consumer.receive();
+            log.info("[{}] Received new message {} from topic.", consumer.getSubscription(),
+                    received.getValue());
+            consumer.acknowledge(received);
+        } catch (PulsarClientException e) {
+            log.error("Failed to process message for subscription {}", consumer.getSubscription());
+        }
+    }
+
+    @Trace(operationName = "Application Z")
+    private void processMessageZ(Consumer<String> consumer) {
+        try {
+            Message<String> received = consumer.receive();
+            log.info("[{}] Received new message {} from topic.", consumer.getSubscription(),
+                    received.getValue());
+            consumer.acknowledge(received);
+        } catch (PulsarClientException e) {
+            log.error("Failed to process message for subscription {}", consumer.getSubscription());
+        }
     }
 }
